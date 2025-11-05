@@ -29,6 +29,8 @@
         "deque": "c",
         "initializer_list": "c",
         "queue": "c",
-        "stack": "c"
+        "stack": "c",
+        "ansiicodes.h": "c",
+        "list.h": "c"
     }
 }

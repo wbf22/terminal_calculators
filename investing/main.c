@@ -9,12 +9,6 @@
 #include "dependencies/List.h"
 
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "dependencies/stb_image.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "dependencies/stb_image_write.h"
-
-
 /*
 
 valgrind --leak-check=full --show-leak-kinds=all ./ti

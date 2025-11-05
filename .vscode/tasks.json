@@ -1,12 +1,14 @@
 {
     "tasks": [
-        
         {
-            "label": "bear_make",
+            "label": "build_unit_converter",
             "type": "shell",
-            "command": "python3 bear_make.py make",
+            "command": "python3 ../bear_make.py make",
             "problemMatcher": [],
-            "group": "build"
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}/unit_converter"
+            }
         }
     ]
 }

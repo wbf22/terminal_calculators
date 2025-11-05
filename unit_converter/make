@@ -1,0 +1,8 @@
+
+EXECUTABLE_NAME='units'
+
+FILE='units.c'
+
+DIRECTORY='dependencies'
+
+FLAGS='-lm'

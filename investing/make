@@ -1,5 +1,5 @@
 
-EXECUTABLE_NAME='ti'
+EXECUTABLE_NAME='units'
 
 FILE='main.c'
 

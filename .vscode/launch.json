@@ -7,17 +7,13 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Test C",
-            "program": "${workspaceFolder}/ti",
+            "name": "Unit Converter",
+            "program": "${workspaceFolder}/unit_converter/units",
             "args": [
-                "-i",
-                // "test/skull_knight.png"
-                // "test/wizards.jpg"
-                // "test/test.png"
-                "test/red_castle.jpg"
+                // "-i",
             ],
             "cwd": "${workspaceFolder}",
-            "preLaunchTask": "bear_make"
+            "preLaunchTask": "build_unit_converter"
         },
         {
             "name": "Debug Bear Make",
