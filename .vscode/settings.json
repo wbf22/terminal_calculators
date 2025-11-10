@@ -33,6 +33,7 @@
         "ansiicodes.h": "c",
         "list.h": "c",
         "ioctl.h": "c",
-        "wchar.h": "c"
+        "wchar.h": "c",
+        "string.h": "c"
     }
 }

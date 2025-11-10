@@ -13,24 +13,35 @@ typedef struct {
     uint8_t r;
     uint8_t g;
     uint8_t b;
-} Color;
+} SWColor;
 
 typedef struct {
     char* unicode;
-    Color text_color;
-    Color background_color;
-} Cell;
+    SWColor text_color;
+    SWColor background_color;
+} SWCell;
 
 typedef struct {
-    Cell** current_cells;
+    SWCell** current_cells;
     int current_width;
     int current_height;
 } ScreenWriter;
 
-Cell** copy_cell_array(Cell** cells, int length) {
+void sw_copy_cell(SWCell* cell, SWCell* dest) {
+    free(dest->unicode);
+    dest->unicode = strdup(cell->unicode);
+    dest->background_color.r = cell->background_color.r;
+    dest->background_color.g = cell->background_color.g;
+    dest->background_color.b = cell->background_color.b;
+    dest->text_color.r = cell->text_color.r;
+    dest->text_color.g = cell->text_color.g;
+    dest->text_color.b = cell->text_color.b;
+}
+
+SWCell** sw_copy_cell_array(SWCell** cells, int length) {
     if (!cells || length <= 0) return NULL;
 
-    Cell** copy = malloc(sizeof(Cell*) * length);
+    SWCell** copy = malloc(sizeof(SWCell*) * length);
     if (!copy) return NULL;
     
     for (int i = 0; i < length; i++) {
@@ -39,37 +50,14 @@ Cell** copy_cell_array(Cell** cells, int length) {
             continue;
         }
 
-        // Allocate memory for new Cell
-        copy[i] = malloc(sizeof(Cell));
-        if (!copy[i]) {
-            // In case of allocation failure, free already allocated cells
-            for (int j = 0; j < i; j++) free(copy[j]);
-            free(copy);
-            return NULL;
-        }
-
-        // Copy the colors
-        copy[i]->text_color = cells[i]->text_color;
-        copy[i]->background_color = cells[i]->background_color;
-
-        // Deep copy unicode string
-        if (cells[i]->unicode) {
-            copy[i]->unicode = strdup(cells[i]->unicode);
-            if (!copy[i]->unicode) {
-                // Free already allocated memory
-                for (int j = 0; j <= i; j++) free(copy[j]);
-                free(copy);
-                return NULL;
-            }
-        } else {
-            copy[i]->unicode = NULL;
-        }
+        copy[i] = malloc(sizeof(SWCell));
+        sw_copy_cell(cells[i], copy[i]);
     }
 
     return copy;
 }
 
-void free_cell_array(Cell** cells, int length) {
+void sw_free_cell_array(SWCell** cells, int length) {
     if (!cells) return;
     for (int i = 0; i < length; i++) {
         if (cells[i]) {
@@ -80,7 +68,7 @@ void free_cell_array(Cell** cells, int length) {
     free(cells);
 }
 
-int cell_eq(Cell* cell_1, Cell* cell_2) {
+int sw_cell_eq(SWCell* cell_1, SWCell* cell_2) {
     return strcmp(cell_1->unicode, cell_2->unicode) == 0 &&
         cell_1->text_color.r == cell_2->text_color.r &&
         cell_1->text_color.g == cell_2->text_color.g &&
@@ -90,16 +78,18 @@ int cell_eq(Cell* cell_1, Cell* cell_2) {
         cell_1->background_color.b == cell_2->background_color.b;
 }
 
-void set_cursor(int row, int col) {
+void sw_set_cursor(int row, int col) {
     printf("\033[%s;%sH", row, col);
 }
 
-void get_terminal_dimensions(int* width, int* height) {
+void sw_get_terminal_dimensions(int* width, int* height) {
 
     struct winsize w;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) {
         perror("ioctl");
-        return 1;
+        *width = -1;
+        *height = -1;
+        return;
     }
     *width = w.ws_col;
     *height = w.ws_row;
@@ -108,13 +98,13 @@ void get_terminal_dimensions(int* width, int* height) {
 /**
  * Repaints the screen with the new cells, skipping any that are unchanged
  */
-void set_screen(Cell** new_cells, int width, int height, ScreenWriter* screen_writer) {
+void sw_set_screen(SWCell** new_cells, int width, int height, ScreenWriter* screen_writer) {
 
     // if screen size has changed reset everything
-    if (screen_writer->current_height != height || screen_writer->current_width != width) {
+    if (screen_writer->current_cells == NULL || screen_writer->current_height != height || screen_writer->current_width != width) {
         printf("\033[2J"); // Clear entire screen
         for (int i = 0; i < width * height; ++i) {
-            Cell* cell = new_cells[i];
+            SWCell* cell = new_cells[i];
             printf(
                 "\033[38;2;%d;%d;%dm\033[48;2;%d;%d;%dm%s", 
                 cell->text_color.r, 
@@ -128,6 +118,10 @@ void set_screen(Cell** new_cells, int width, int height, ScreenWriter* screen_wr
                 cell->unicode
             );
         }
+        if (screen_writer->current_cells != NULL) {
+            sw_free_cell_array(screen_writer->current_cells, screen_writer->current_width * screen_writer->current_height);
+        }
+        screen_writer->current_cells = sw_copy_cell_array(new_cells, width * height);
         printf(ANSI_RESET);
         fflush(stdout);
     }
@@ -135,12 +129,12 @@ void set_screen(Cell** new_cells, int width, int height, ScreenWriter* screen_wr
     else {
         int length = width * height;
         for (int i = 0; i < length; ++i) {
-            Cell* cell = new_cells[i];
-            Cell* old_cell = screen_writer->current_cells[i];
-            if (!cell_eq(cell, old_cell)) {
+            SWCell* cell = new_cells[i];
+            SWCell* old_cell = screen_writer->current_cells[i];
+            if (!sw_cell_eq(cell, old_cell)) {
                 int y = i / width;
                 int x = i - y;
-                set_cursor(x, y);
+                sw_set_cursor(x, y);
                 printf(
                     "\033[38;2;%d;%d;%dm\033[48;2;%d;%d;%dm%s", 
                     cell->text_color.r, 
@@ -153,6 +147,7 @@ void set_screen(Cell** new_cells, int width, int height, ScreenWriter* screen_wr
                 
                     cell->unicode
                 );
+                sw_copy_cell(cell, screen_writer->current_cells[i]);
             }
             
         }

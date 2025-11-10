@@ -1271,7 +1271,24 @@ int TERMINAL_WIDTH, TERMINAL_HEIGHT;
 ScreenWriter* screen_writer;
 
 void handle_resize(int sig) {
-    get_terminal_dimensions(&TERMINAL_WIDTH, &TERMINAL_HEIGHT);
+    sw_get_terminal_dimensions(&TERMINAL_WIDTH, &TERMINAL_HEIGHT);
+}
+
+void set_cells(char* value, SWColor background, SWColor text_color, SWCell** cells, int x, int y) {
+    int i = x + y * TERMINAL_WIDTH;
+    for (int ix = 0; ix < strlen(value); ++ix) {
+        if (x + ix < TERMINAL_WIDTH) {
+            char cell_char[2];
+            cell_char[0] = value[ix];
+            cell_char[1] = '\0';
+            SWCell cell = {
+                cell_char,
+                text_color,
+                background
+            };
+            sw_copy_cell(&cell, cells[i + ix]);
+        }
+    }
 }
 
 int main(int argc, char **argv) {
@@ -1280,14 +1297,98 @@ int main(int argc, char **argv) {
     signal(SIGWINCH, handle_resize);
 
     // init
-    get_terminal_dimensions(&TERMINAL_WIDTH, &TERMINAL_HEIGHT);
+    sw_get_terminal_dimensions(&TERMINAL_WIDTH, &TERMINAL_HEIGHT);
+    TERMINAL_HEIGHT--;
     screen_writer = malloc(sizeof(ScreenWriter));
     screen_writer->current_height = TERMINAL_HEIGHT;
     screen_writer->current_width = TERMINAL_WIDTH;
 
 
-    // main loop
+    /*
+    rgb(100, 69, 54)
+    rgb(178, 103, 94)
+    rgb(196, 163, 129)
+    rgb(187, 214, 134)
+    rgb(238, 241, 189)
+    */
 
+    // main loop
+    SWCell** cells = malloc(sizeof(SWCell*) * TERMINAL_HEIGHT * TERMINAL_WIDTH);
+
+    SWColor background = {0,0,0};
+    SWColor primary = {238, 241, 189};
+    SWColor secondary = {196, 163, 129};
+    SWColor tercery = {178, 103, 94};
+
+    int last_x = TERMINAL_WIDTH - 1;
+    int last_y = TERMINAL_HEIGHT - 1;
+    for (int x = 0; x < TERMINAL_WIDTH; ++x) {
+        for (int y = 0; y < TERMINAL_HEIGHT; ++y) {
+            SWCell* cell = malloc(sizeof(SWCell));
+            cell->unicode = strdup(" ");
+
+            if (x == 0 && y == 0) {
+                cell->unicode = strdup(HEAVY_DOWN_AND_RIGHT);
+            }
+            else if (x == 0 && y == last_y) {
+                cell->unicode = strdup(HEAVY_UP_AND_RIGHT);
+            }
+            else if (x == last_x && y == 0) {
+                cell->unicode = strdup(HEAVY_DOWN_AND_LEFT);
+            }
+            else if (x == last_x && y == last_y) {
+                cell->unicode = strdup(HEAVY_UP_AND_LEFT);
+            }
+            else if (x % TERMINAL_WIDTH == 0 || (x+1) % TERMINAL_WIDTH == 0) {
+                cell->unicode = strdup(HEAVY_VERTICAL);
+            }
+            else if (y == 0 || (y+1) == TERMINAL_HEIGHT) {
+                cell->unicode = strdup(HEAVY_HORIZONTAL);
+            }
+
+            cell->background_color.r = background.r;
+            cell->background_color.g = background.g;
+            cell->background_color.b = background.b;
+
+            cell->text_color.r = tercery.r;
+            cell->text_color.g = tercery.g;
+            cell->text_color.b = tercery.b;
+            
+
+            int index = x + y * TERMINAL_WIDTH;
+            cells[index] = cell;
+        }
+    }
+    
+    
+    set_cells(
+        "value",
+        background,
+        primary,
+        cells,
+        4,
+        4
+    );
+    
+    set_cells(
+        "1",
+        background,
+        secondary,
+        cells,
+        20,
+        4
+    );
+    
+    set_cells(
+        "from",
+        background,
+        primary,
+        cells,
+        36,
+        4
+    );
+    
+    sw_set_screen(cells, TERMINAL_WIDTH, TERMINAL_HEIGHT, screen_writer);
 
 
     // // define units
