@@ -9,6 +9,16 @@
             "options": {
                 "cwd": "${workspaceFolder}/unit_converter"
             }
-        }
+        },
+        {
+            "label": "build_emojis",
+            "type": "shell",
+            "command": "python3 ../bear_make.py make",
+            "problemMatcher": [],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}/emojis"
+            }
+        },
     ]
 }

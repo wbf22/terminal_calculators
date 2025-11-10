@@ -5,6 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug Bear Make",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "bear_make.py",
+            "console": "integratedTerminal",
+            "args": [
+                "make"
+            ]
+        },
+        {
             "type": "lldb",
             "request": "launch",
             "name": "Unit Converter",
@@ -16,14 +26,15 @@
             "preLaunchTask": "build_unit_converter"
         },
         {
-            "name": "Debug Bear Make",
-            "type": "debugpy",
+            "type": "lldb",
             "request": "launch",
-            "program": "bear_make.py",
-            "console": "integratedTerminal",
+            "name": "Emojis",
+            "program": "${workspaceFolder}/emojis/emojis",
             "args": [
-                "make"
-            ]
+                // "-c",
+            ],
+            "cwd": "${workspaceFolder}/emojis",
+            "preLaunchTask": "build_emojis"
         },
     ]
 }

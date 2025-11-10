@@ -31,6 +31,8 @@
         "queue": "c",
         "stack": "c",
         "ansiicodes.h": "c",
-        "list.h": "c"
+        "list.h": "c",
+        "ioctl.h": "c",
+        "wchar.h": "c"
     }
 }

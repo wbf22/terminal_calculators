@@ -1,0 +1,8 @@
+
+EXECUTABLE_NAME='emojis'
+
+FILE='emojis.c'
+
+
+FLAGS='-lm'
+
